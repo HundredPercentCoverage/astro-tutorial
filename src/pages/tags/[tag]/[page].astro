@@ -1,14 +1,22 @@
 ---
-import BlogPost from '../../../components/BlogPost.astro';
-import BaseLayout from '../../../layouts/BaseLayout.astro';
+import BlogPost from "../../../components/BlogPost.astro";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
 
 export async function getStaticPaths({ paginate }) {
-  const allPosts = await Astro.glob('../../posts/*.md');
+  const allPosts = await Astro.glob("../../posts/*.md");
 
-  const uniqueTags = [...new Set(allPosts.map((post) => post.frontmatter.tags).flat())];
+  const uniqueTags = [
+    ...new Set(allPosts.map((post) => post.frontmatter.tags).flat()),
+  ];
 
   return uniqueTags.map((tag) => {
-    const filteredPosts = allPosts.filter((post) => post.frontmatter.tags.includes(tag));
+    const filteredPosts = allPosts
+      .filter((post) => post.frontmatter.tags.includes(tag))
+      .sort(
+        (a, b) =>
+          Date.parse(a.frontmatter.pubDate) - Date.parse(b.frontmatter.pubDate)
+      );
+
     return paginate(filteredPosts, {
       params: { tag },
       pageSize: 2,
@@ -19,10 +27,15 @@ export async function getStaticPaths({ paginate }) {
 const { tag } = Astro.params;
 const { page } = Astro.props;
 ---
+
 <BaseLayout pageTitle={tag}>
   <p>Posts tagged with {tag}</p>
   <ul>
-    {page.data.map((post) => <BlogPost url={post.url} title={post.frontmatter.title} />)}
+    {
+      page.data.map((post) => (
+        <BlogPost url={post.url} title={post.frontmatter.title} />
+      ))
+    }
   </ul>
   {page.url.prev ? <a href={page.url.prev}>Previous</a> : null}
   {page.url.next ? <a href={page.url.next}>Next</a> : null}
